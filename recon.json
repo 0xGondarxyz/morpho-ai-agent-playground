@@ -1,0 +1,93 @@
+{
+  ".recon/out/Morpho.sol/Morpho.json": {
+    "enabled": true,
+    "functions": [
+      {
+        "signature": "accrueInterest(MarketParams)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "borrow(MarketParams,uint256,uint256,address,address)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "createMarket(MarketParams)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "enableIrm(address)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "enableLltv(uint256)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "flashLoan(address,uint256,bytes)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "liquidate(MarketParams,address,uint256,uint256,bytes)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "repay(MarketParams,uint256,uint256,address,bytes)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "setAuthorization(address,bool)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "setAuthorizationWithSig(Authorization,Signature)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "setFee(MarketParams,uint256)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "setFeeRecipient(address)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "setOwner(address)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "supply(MarketParams,uint256,uint256,address,bytes)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "supplyCollateral(MarketParams,uint256,address,bytes)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "withdraw(MarketParams,uint256,uint256,address,address)",
+        "actor": "actor",
+        "mode": "normal"
+      },
+      {
+        "signature": "withdrawCollateral(MarketParams,uint256,address,address)",
+        "actor": "actor",
+        "mode": "normal"
+      }
+    ],
+    "separated": true
+  }
+}

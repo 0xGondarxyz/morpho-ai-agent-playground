@@ -1,0 +1,5 @@
+{
+  "recon.defaultFuzzer": "Echidna",
+  "recon.mocksFolderPath": "test/recon/mocks",
+  "recon.echidna.mode": "exploration"
+}

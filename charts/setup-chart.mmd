@@ -1,0 +1,42 @@
+graph TD
+    subgraph Level1["Level 1: No Dependencies"]
+        Morpho["<b>Morpho</b><br/>constructor(address newOwner)"]
+        OracleMock["OracleMock<br/>constructor()"]
+        IrmMock["IrmMock<br/>constructor()"]
+        ERC20Mock["ERC20Mock<br/>constructor()"]
+    end
+
+    subgraph Level2["Level 2: Depends on Morpho"]
+        FlashBorrowerMock["FlashBorrowerMock<br/>constructor(IMorpho)"]
+    end
+
+    Morpho --> FlashBorrowerMock
+
+    subgraph PostDeploy["Post-Deployment Configuration"]
+        subgraph Required["Required (for markets)"]
+            EnableIrm["morpho.enableIrm(irm)"]
+            EnableLltv["morpho.enableLltv(lltv)"]
+            SetPrice["oracle.setPrice(price)"]
+            SetBalance["token.setBalance(user, amount)"]
+        end
+        subgraph Optional["Optional"]
+            SetOwner["morpho.setOwner(newOwner)"]
+            SetFee["morpho.setFee(market, fee)"]
+            SetFeeRecipient["morpho.setFeeRecipient(addr)"]
+        end
+    end
+
+    Morpho -.->|required| EnableIrm
+    Morpho -.->|required| EnableLltv
+    Morpho -.->|optional| SetOwner
+    Morpho -.->|optional| SetFee
+    Morpho -.->|optional| SetFeeRecipient
+    OracleMock -.->|required| SetPrice
+    ERC20Mock -.->|required| SetBalance
+
+    subgraph Runtime["Runtime: Create Markets"]
+        CreateMarket["morpho.createMarket(params)<br/><i>Anyone can call</i>"]
+    end
+
+    EnableIrm -.-> CreateMarket
+    EnableLltv -.-> CreateMarket
