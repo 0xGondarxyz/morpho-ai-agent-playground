@@ -21,7 +21,12 @@ Correct example format:
 
 ## KB Structure
 
-- `kb/` contains knowledge base documentation
-- `kb/prompts/` contains prompts for generating KB files
-- `charts/` contains visual diagrams
-- Follow `kb/prompts/workflow.md` for execution order
+```
+kb/
+├── system-digest.md      # Single-page protocol overview
+├── starterPrompts.md     # Prompt to regenerate KB on new codebases
+└── charts/
+    ├── setup.md          # Deployment & configuration diagrams
+    ├── roles.md          # Access control matrix & hierarchy
+    └── usage-flows.md    # User journey sequence diagrams
+```
