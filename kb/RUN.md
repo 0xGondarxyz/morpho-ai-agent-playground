@@ -13,8 +13,6 @@ For each step:
 
 Start with Step 1 (Information Gathering) which creates the cache, then Steps 2-7 will use that cache.
 
-NOTE: Step 7 modifies actual source code files by adding inline documentation. Confirm before executing Step 7.
-
 Execute now.
 ```
 
@@ -44,7 +42,7 @@ Replace `[N]` with:
 - 4 = Charts & Flows
 - 5 = System Overview
 - 6 = Code Documentation (KB file)
-- 7 = Inline Documentation (⚠️ MODIFIES SOURCE FILES)
+- 7 = Inline Documentation (modifies source files)
 
 ---
 
@@ -66,7 +64,7 @@ Read kb/prompts.md. Execute Steps [X] through [Y].
 | 4 | 4a-setupCharts.md, 4b-roleCharts.md, 4c-usageFlows.md | KB file |
 | 5 | 5-overview.md | KB file |
 | 6 | 6-codeDocumentation.md | KB file |
-| 7 | {src}/*.sol (modified with inline docs) | ⚠️ SOURCE MODIFICATION |
+| 7 | {src}/*.sol (modified with inline docs) | Source modification |
 
 ---
 
@@ -91,8 +89,6 @@ For each step, the agent should:
 - Create output file(s) in kb/ folder OR modify source files (Step 7)
 - Return summary of what was created/modified
 
-NOTE: Confirm before executing Step 7 as it modifies source files.
-
 Execute now.
 ```
 
@@ -113,7 +109,6 @@ Phase 2: Once Step 1 completes, spawn 5 agents in parallel using the Task tool:
 - Agent for Step 6: Code Documentation
 
 Phase 3: After Phase 2 completes, run Step 7 (Inline Documentation).
-⚠️ Step 7 modifies source files - confirm before executing.
 
 Each agent reads kb/prompts.md for its step instructions and uses kb/1-informationNeededForSteps.md as cache.
 
@@ -123,8 +118,6 @@ Execute now.
 ---
 
 ## Run Step 7 Only (Inline Documentation)
-
-⚠️ **WARNING: This modifies source code files**
 
 ```
 Read kb/prompts.md. Execute only Step 7 (Inline Code Documentation).
@@ -138,5 +131,5 @@ This will add inline comments to source files documenting:
 
 No logic will be changed - only comments added.
 
-Confirm and execute.
+Execute now.
 ```
