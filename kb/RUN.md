@@ -1,135 +1,188 @@
-# KB Generation - Master Prompts
+# KB Generation - Execution Commands
 
-## Run All Steps (1-7)
+## Agent Files
 
 ```
-Read kb/prompts.md and execute ALL steps (1-7) in order.
+kb/agent/
+├── 1-information-gathering-phase.md
+├── 2-contract-discovery-phase.md
+├── 3-deployment-phase-0.md
+├── 3-deployment-phase-1.md
+├── 4-charts-phase-0.md
+├── 4-charts-phase-1.md
+├── 4-charts-phase-2.md
+├── 5-overview-phase.md
+├── 6-documentation-phase.md
+└── 7-inline-docs-phase.md
+```
 
-For each step:
-1. Read the step's instructions from prompts.md
-2. Execute the step following its TRY cache / FALLBACK pattern
-3. Create the output file(s) in kb/ folder (Steps 1-6) or modify source files (Step 7)
-4. Move to next step
+---
 
-Start with Step 1 (Information Gathering) which creates the cache, then Steps 2-7 will use that cache.
+## Total Execution (All Steps 1-7)
+
+```
+Execute all KB generation agents in order.
+
+Read and execute each file in kb/agent/ following this order:
+1. 1-information-gathering-phase.md
+2. 2-contract-discovery-phase.md
+3. 3-deployment-phase-0.md, then 3-deployment-phase-1.md
+4. 4-charts-phase-0.md, then 4-charts-phase-1.md, then 4-charts-phase-2.md
+5. 5-overview-phase.md
+6. 6-documentation-phase.md
+7. 7-inline-docs-phase.md
+
+For steps with multiple phases (3, 4), execute phase-0 first, then phase-1, then phase-2.
 
 Execute now.
 ```
 
 ---
 
-## Run KB Only (Steps 1-6, No Source Modification)
+## Total Execution (KB Only, No Source Modification)
 
 ```
-Read kb/prompts.md and execute Steps 1-6 in order.
-Do NOT execute Step 7 (which modifies source files).
+Execute KB generation agents for Steps 1-6 only.
+
+Read and execute each file in kb/agent/ following this order:
+1. 1-information-gathering-phase.md
+2. 2-contract-discovery-phase.md
+3. 3-deployment-phase-0.md, then 3-deployment-phase-1.md
+4. 4-charts-phase-0.md, then 4-charts-phase-1.md, then 4-charts-phase-2.md
+5. 5-overview-phase.md
+6. 6-documentation-phase.md
+
+Do NOT execute Step 7 (7-inline-docs-phase.md) which modifies source files.
 
 Execute now.
 ```
 
 ---
 
-## Run Single Step
+## Parallel Execution (After Cache)
 
 ```
-Read kb/prompts.md. Execute only Step [N].
-```
+Execute KB generation with parallel agents where possible.
 
-Replace `[N]` with:
-- 1 = Information Gathering (cache)
-- 2 = Contract Discovery
-- 3 = Dependencies & Deployment
-- 4 = Charts & Flows
-- 5 = System Overview
-- 6 = Code Documentation (KB file)
-- 7 = Inline Documentation (modifies source files)
+Phase 1 (Sequential - Required First):
+- Execute 1-information-gathering-phase.md
 
----
+Phase 2 (Parallel - All can run simultaneously):
+Spawn parallel agents for:
+- 2-contract-discovery-phase.md
+- 3-deployment-phase-0.md
+- 4-charts-phase-0.md
+- 4-charts-phase-1.md
+- 4-charts-phase-2.md
+- 5-overview-phase.md
+- 6-documentation-phase.md
 
-## Run Steps Range
+Phase 3 (Sequential - After Phase 2):
+- Execute 3-deployment-phase-1.md (depends on 3-deployment-phase-0.md output)
 
-```
-Read kb/prompts.md. Execute Steps [X] through [Y].
-```
-
----
-
-## Output Files Created
-
-| Step | Output | Type |
-|------|--------|------|
-| 1 | 1-informationNeededForSteps.md | KB file |
-| 2 | 2-contractsList.md | KB file |
-| 3 | 3a-dependencyList.md, 3b-deploymentPattern.md | KB file |
-| 4 | 4a-setupCharts.md, 4b-roleCharts.md, 4c-usageFlows.md | KB file |
-| 5 | 5-overview.md | KB file |
-| 6 | 6-codeDocumentation.md | KB file |
-| 7 | {src}/*.sol (modified with inline docs) | Source modification |
-
----
-
-## Alternative Prompt (Agentic Workflow)
-
-This approach uses the Task tool to spawn separate agents for each step, allowing parallel execution where possible.
-
-```
-You are provided a Solidity protocol codebase in the current directory and KB generation instructions at kb/prompts.md.
-
-1. Read kb/prompts.md to understand all steps (1-7)
-2. Use the current directory as your working directory
-3. Run each KB generation step as a separate agent using the Task tool:
-
-   - First, run kb-step-1 (Information Gathering) and wait for completion
-   - Then run kb-step-2 through kb-step-6 in parallel using the Task tool (KB file generation)
-   - Finally, run kb-step-7 (Inline Documentation) after Steps 2-6 complete
-
-For each step, the agent should:
-- Read the step's instructions from kb/prompts.md
-- Follow the TRY cache / FALLBACK pattern
-- Create output file(s) in kb/ folder OR modify source files (Step 7)
-- Return summary of what was created/modified
+Phase 4 (Optional - Source Modification):
+- Execute 7-inline-docs-phase.md
 
 Execute now.
 ```
 
 ---
 
-## Alternative Prompt (Parallel Agents After Cache)
+## Separate Execution - Individual Steps
 
+### Step 1: Information Gathering
 ```
-Read kb/prompts.md.
+Read and execute kb/agent/1-information-gathering-phase.md
+```
 
-Phase 1: Run Step 1 (Information Gathering) to create the cache.
+### Step 2: Contract Discovery
+```
+Read and execute kb/agent/2-contract-discovery-phase.md
+```
 
-Phase 2: Once Step 1 completes, spawn 5 agents in parallel using the Task tool:
-- Agent for Step 2: Contract Discovery
-- Agent for Step 3: Dependencies & Deployment
-- Agent for Step 4: Charts & Flows
-- Agent for Step 5: System Overview
-- Agent for Step 6: Code Documentation
+### Step 3: Deployment (Both Phases)
+```
+Read and execute kb/agent/3-deployment-phase-0.md
+Then read and execute kb/agent/3-deployment-phase-1.md
+```
 
-Phase 3: After Phase 2 completes, run Step 7 (Inline Documentation).
+### Step 3 Phase 0 Only: Dependencies
+```
+Read and execute kb/agent/3-deployment-phase-0.md
+```
 
-Each agent reads kb/prompts.md for its step instructions and uses kb/1-informationNeededForSteps.md as cache.
+### Step 3 Phase 1 Only: Deployment Pattern
+```
+Read and execute kb/agent/3-deployment-phase-1.md
+```
 
-Execute now.
+### Step 4: Charts (All Phases)
+```
+Read and execute kb/agent/4-charts-phase-0.md
+Then read and execute kb/agent/4-charts-phase-1.md
+Then read and execute kb/agent/4-charts-phase-2.md
+```
+
+### Step 4 Phase 0 Only: Setup Charts
+```
+Read and execute kb/agent/4-charts-phase-0.md
+```
+
+### Step 4 Phase 1 Only: Role Charts
+```
+Read and execute kb/agent/4-charts-phase-1.md
+```
+
+### Step 4 Phase 2 Only: Usage Flows
+```
+Read and execute kb/agent/4-charts-phase-2.md
+```
+
+### Step 5: System Overview
+```
+Read and execute kb/agent/5-overview-phase.md
+```
+
+### Step 6: Code Documentation
+```
+Read and execute kb/agent/6-documentation-phase.md
+```
+
+### Step 7: Inline Documentation (Modifies Source)
+```
+Read and execute kb/agent/7-inline-docs-phase.md
+
+WARNING: This step modifies source files by adding inline comments.
 ```
 
 ---
 
-## Run Step 7 Only (Inline Documentation)
+## Output Files
+
+| Step | Phase | Agent File | Output |
+|------|-------|------------|--------|
+| 1 | - | 1-information-gathering-phase.md | `kb/output/1-informationNeededForSteps.md` |
+| 2 | - | 2-contract-discovery-phase.md | `kb/output/2-contractsList.md` |
+| 3 | 0 | 3-deployment-phase-0.md | `kb/output/deployment-0-dependencyList.md` |
+| 3 | 1 | 3-deployment-phase-1.md | `kb/output/deployment-1-pattern.md` |
+| 4 | 0 | 4-charts-phase-0.md | `kb/output/charts-0-setup.md` |
+| 4 | 1 | 4-charts-phase-1.md | `kb/output/charts-1-roles.md` |
+| 4 | 2 | 4-charts-phase-2.md | `kb/output/charts-2-flows.md` |
+| 5 | - | 5-overview-phase.md | `kb/output/5-overview.md` |
+| 6 | - | 6-documentation-phase.md | `kb/output/6-codeDocumentation.md` |
+| 7 | - | 7-inline-docs-phase.md | `src/*.sol` (modified) + `kb/output/7-inline-docs-summary.md` |
+
+---
+
+## Run Range of Steps
 
 ```
-Read kb/prompts.md. Execute only Step 7 (Inline Code Documentation).
+Execute KB generation agents for Steps [X] through [Y].
 
-This will add inline comments to source files documenting:
-- Bounds and limits
-- Complex math explanations
-- Security considerations
-- State transitions
-- Edge cases
-
-No logic will be changed - only comments added.
+Read and execute files in kb/agent/ for steps [X] to [Y] in order.
+For multi-phase steps, execute all phases (phase-0, phase-1, phase-2) in order.
 
 Execute now.
 ```
+
+Replace `[X]` and `[Y]` with step numbers (1-7).
