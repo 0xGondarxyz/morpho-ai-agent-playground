@@ -169,10 +169,9 @@ contract Morpho is IMorphoStaticTyping {
 
     /* ONLY OWNER FUNCTIONS */
 
-    // --- OWNER FUNCTIONS: setOwner ---
-    // STATE: Transfers contract ownership to new address.
-    // SECURITY: No two-step transfer - immediate and irreversible.
-    // WARNING: Can set owner to address(0), permanently disabling admin functions.
+    /// @dev STATE: Transfers contract ownership to new address.
+    /// @dev SECURITY: No two-step transfer - immediate and irreversible.
+    /// @dev WARNING: Can set owner to address(0), permanently disabling admin functions.
     /// @inheritdoc IMorphoBase
     function setOwner(address newOwner) external onlyOwner {
         // BOUNDS: Prevent no-op state change
@@ -184,10 +183,9 @@ contract Morpho is IMorphoStaticTyping {
         emit EventsLib.SetOwner(newOwner);
     }
 
-    // --- OWNER FUNCTIONS: enableIrm ---
-    // STATE: Whitelists an Interest Rate Model for market creation.
-    // SECURITY: Once enabled, CANNOT be disabled. Owner must trust IRM code.
-    // NOTE: address(0) is a valid IRM (creates 0% APR markets).
+    /// @dev STATE: Whitelists an Interest Rate Model for market creation.
+    /// @dev SECURITY: Once enabled, CANNOT be disabled. Owner must trust IRM code.
+    /// @dev NOTE: address(0) is a valid IRM (creates 0% APR markets).
     /// @inheritdoc IMorphoBase
     function enableIrm(address irm) external onlyOwner {
         // BOUNDS: Prevent re-enabling already enabled IRM
@@ -199,11 +197,10 @@ contract Morpho is IMorphoStaticTyping {
         emit EventsLib.EnableIrm(irm);
     }
 
-    // --- OWNER FUNCTIONS: enableLltv ---
-    // STATE: Whitelists a Loan-to-Value ratio for market creation.
-    // BOUNDS: lltv must be < WAD (1e18 = 100%). Common values: 0.8e18 (80%), 0.9e18 (90%).
-    // SECURITY: Higher LLTV = more leverage = higher liquidation risk.
-    // WARNING: Cannot be disabled once enabled.
+    /// @dev STATE: Whitelists a Loan-to-Value ratio for market creation.
+    /// @dev BOUNDS: lltv must be < WAD (1e18 = 100%). Common values: 0.8e18 (80%), 0.9e18 (90%).
+    /// @dev SECURITY: Higher LLTV = more leverage = higher liquidation risk.
+    /// @dev WARNING: Cannot be disabled once enabled.
     /// @inheritdoc IMorphoBase
     function enableLltv(uint256 lltv) external onlyOwner {
         // BOUNDS: Prevent re-enabling already enabled LLTV
@@ -218,11 +215,11 @@ contract Morpho is IMorphoStaticTyping {
         emit EventsLib.EnableLltv(lltv);
     }
 
-    // --- OWNER FUNCTIONS: setFee ---
-    // STATE: Sets protocol fee for a market. Fee is percentage of interest accrued.
-    // BOUNDS: newFee must be <= MAX_FEE (0.25e18 = 25%).
-    // MATH: Fee = interest * fee / WAD. At 25% fee and 100 interest, protocol gets 25.
-    // STATE: Accrues interest with OLD fee before applying new fee (fair accounting).
+    /// @dev STATE: Sets protocol fee for a market. Fee is percentage of interest accrued.
+    /// @dev BOUNDS: newFee must be <= MAX_FEE (0.25e18 = 25%).
+    /// @dev MATH: Fee = interest * fee / WAD. At 25% fee and 100 interest, protocol gets 25.
+    /// @dev STATE: Accrues interest with OLD fee before applying new fee (fair accounting).
+    /// @dev EXTERNAL: Calls IRM.borrowRate() via _accrueInterest - IRM is trusted dependency.
     /// @inheritdoc IMorphoBase
     function setFee(MarketParams memory marketParams, uint256 newFee) external onlyOwner {
         Id id = marketParams.id();
@@ -244,10 +241,10 @@ contract Morpho is IMorphoStaticTyping {
         emit EventsLib.SetFee(id, newFee);
     }
 
-    // --- OWNER FUNCTIONS: setFeeRecipient ---
-    // STATE: Sets address that receives protocol fee shares.
-    // WARNING: If set to address(0), fees are LOST (shares minted to zero address).
-    // NOTE: Changing recipient allows new recipient to claim any not-yet-accrued fees.
+    /// @dev STATE: Sets address that receives protocol fee shares.
+    /// @dev WARNING: If set to address(0), fees are LOST (shares minted to zero address).
+    /// @dev WARNING: Changing recipient does NOT accrue interest on all markets first.
+    /// @dev NOTE: New recipient can claim not-yet-accrued fees from all markets.
     /// @inheritdoc IMorphoBase
     function setFeeRecipient(address newFeeRecipient) external onlyOwner {
         // BOUNDS: Prevent no-op state change
@@ -261,12 +258,11 @@ contract Morpho is IMorphoStaticTyping {
 
     /* MARKET CREATION */
 
-    // --- MARKET CREATION ---
-    // STATE: Creates a new isolated lending market with specified parameters.
-    // SECURITY: Permissionless - anyone can create markets using owner-whitelisted IRM and LLTV.
-    // MATH: Market ID = keccak256(abi.encode(loanToken, collateralToken, oracle, irm, lltv)).
-    //       Same parameters always produce same ID - deterministic and collision-resistant.
-    // EXTERNAL: Calls IRM.borrowRate() to initialize stateful IRMs (e.g., adaptive rate models).
+    /// @dev STATE: Creates a new isolated lending market with specified parameters.
+    /// @dev SECURITY: Permissionless - anyone can create markets using owner-whitelisted IRM and LLTV.
+    /// @dev MATH: Market ID = keccak256(abi.encode(loanToken, collateralToken, oracle, irm, lltv)).
+    /// @dev INVARIANT: Markets are immutable once created - parameters cannot be changed.
+    /// @dev EXTERNAL: Calls IRM.borrowRate() to initialize stateful IRMs (e.g., adaptive rate models).
     /// @inheritdoc IMorphoBase
     function createMarket(MarketParams memory marketParams) external {
         // MATH: Compute deterministic market ID from all parameters
@@ -359,13 +355,12 @@ contract Morpho is IMorphoStaticTyping {
         return (assets, shares);
     }
 
-    // --- WITHDRAW FUNCTION ---
-    // STATE: Burns supply shares and withdraws loan tokens from market.
-    // SECURITY: Requires authorization - msg.sender must be onBehalf OR authorized by onBehalf.
-    //           This prevents unauthorized withdrawal from other users' positions.
-    // MATH: shares = assets * (totalShares + VIRTUAL_SHARES) / (totalAssets + VIRTUAL_ASSETS), rounded UP.
-    // MATH: Rounding - assets to shares rounds UP (user burns more), shares to assets rounds DOWN (user gets less).
-    // INVARIANT: After withdrawal, totalBorrowAssets <= totalSupplyAssets must hold (liquidity constraint).
+    /// @dev STATE: Burns supply shares and withdraws loan tokens from market.
+    /// @dev SECURITY: Requires authorization - msg.sender must be onBehalf OR authorized by onBehalf.
+    /// @dev MATH: If assets > 0: assets to shares rounds UP (user burns more shares).
+    /// @dev MATH: If shares > 0: shares to assets rounds DOWN (user receives fewer assets).
+    /// @dev INVARIANT: After withdrawal, totalBorrowAssets <= totalSupplyAssets must hold (liquidity constraint).
+    /// @dev EXTERNAL: Transfers loan tokens to receiver via SafeTransferLib.
     /// @inheritdoc IMorphoBase
     function withdraw(
         MarketParams memory marketParams,
@@ -419,16 +414,13 @@ contract Morpho is IMorphoStaticTyping {
 
     /* BORROW MANAGEMENT */
 
-    // --- BORROW FUNCTION ---
-    // STATE: Creates debt position by minting borrow shares and transferring loan tokens.
-    // SECURITY: Requires authorization AND health check. Position must remain healthy after borrow.
-    //           Authorization prevents borrowing against others' collateral without permission.
-    // EXTERNAL: Calls oracle.price() via _isHealthy() - oracle manipulation is a trust assumption.
-    //           Malicious oracle could allow under-collateralized borrows or block legitimate ones.
-    // INVARIANT: Two invariants must hold:
-    //   1. Health: collateral * price * lltv >= borrowed (position remains collateralized)
-    //   2. Liquidity: totalBorrow <= totalSupply (borrowers can't exceed available funds)
-    // MATH: Rounding - assets to shares rounds UP (borrower owes more), shares to assets rounds DOWN.
+    /// @dev STATE: Creates debt position by minting borrow shares and transferring loan tokens.
+    /// @dev SECURITY: Requires authorization AND health check after state update.
+    /// @dev MATH: If assets > 0: assets to shares rounds UP (borrower owes more shares).
+    /// @dev MATH: If shares > 0: shares to assets rounds DOWN (borrower receives fewer assets).
+    /// @dev INVARIANT: Position must remain healthy: collateral * price * lltv >= borrowed.
+    /// @dev INVARIANT: Global liquidity: totalBorrowAssets <= totalSupplyAssets.
+    /// @dev EXTERNAL: Calls oracle.price() via _isHealthy() - oracle is a trust assumption.
     /// @inheritdoc IMorphoBase
     function borrow(
         MarketParams memory marketParams,
@@ -483,15 +475,12 @@ contract Morpho is IMorphoStaticTyping {
         return (assets, shares);
     }
 
-    // --- REPAY FUNCTION ---
-    // STATE: Repays borrowed tokens, reducing debt position and market totals.
-    // SECURITY: Permissionless - anyone can repay on behalf of any borrower (benefits borrower).
-    //           No authorization needed because repaying only helps the position.
-    // SECURITY: Callback executes AFTER state update but BEFORE token transfer (CEI pattern).
-    // MATH: shares = assets * (totalShares + VIRTUAL_SHARES) / (totalAssets + VIRTUAL_ASSETS), rounded DOWN.
-    // MATH: Rounding - assets to shares rounds DOWN (borrower repays fewer shares - mildly borrower favored).
-    //       This slight rounding benefit is negligible and outweighed by other protocol-favoring rounds.
-    // EDGE CASE: assets may exceed totalBorrowAssets by 1 due to rounding - handled by zeroFloorSub.
+    /// @dev STATE: Repays borrowed tokens, reducing debt position and market totals.
+    /// @dev SECURITY: Permissionless - anyone can repay on behalf of any borrower (benefits borrower).
+    /// @dev SECURITY: Callback executes AFTER state update but BEFORE token transfer (CEI pattern).
+    /// @dev MATH: If assets > 0: assets to shares rounds DOWN (borrower repays fewer shares).
+    /// @dev MATH: If shares > 0: shares to assets rounds UP (borrower pays more assets).
+    /// @dev WARNING: repaidAssets may exceed totalBorrowAssets by 1 due to rounding - handled by zeroFloorSub.
     /// @inheritdoc IMorphoBase
     function repay(
         MarketParams memory marketParams,
@@ -546,15 +535,12 @@ contract Morpho is IMorphoStaticTyping {
 
     /* COLLATERAL MANAGEMENT */
 
-    // --- SUPPLY COLLATERAL FUNCTION ---
-    // STATE: Deposits collateral tokens to back borrowing positions.
-    // SECURITY: Permissionless - anyone can supply collateral for any address (benefits recipient).
-    //           No authorization needed because depositing only helps the position.
-    // SECURITY: Callback executes AFTER state update but BEFORE token transfer (CEI pattern).
-    // OPTIMIZATION: Does NOT accrue interest - collateral doesn't earn interest, so accrual unnecessary.
-    //               This saves gas compared to supply/withdraw/borrow functions.
-    // NOTE: Collateral tracked as raw assets (uint128), NOT shares.
-    //       Unlike supply positions, collateral doesn't accrue value - it's static until withdrawn.
+    /// @dev STATE: Deposits collateral tokens to back borrowing positions.
+    /// @dev SECURITY: Permissionless - anyone can supply collateral for any address (benefits recipient).
+    /// @dev SECURITY: Callback executes AFTER state update but BEFORE token transfer (CEI pattern).
+    /// @dev OPTIMIZATION: Does NOT accrue interest - collateral is static, not interest-bearing.
+    /// @dev BOUNDS: Collateral tracked as raw uint128 assets, not shares.
+    /// @dev NOTE: Unlike supply positions, collateral does not accrue value.
     /// @inheritdoc IMorphoBase
     function supplyCollateral(MarketParams memory marketParams, uint256 assets, address onBehalf, bytes calldata data)
         external
@@ -585,13 +571,11 @@ contract Morpho is IMorphoStaticTyping {
         IERC20(marketParams.collateralToken).safeTransferFrom(msg.sender, address(this), assets);
     }
 
-    // --- WITHDRAW COLLATERAL FUNCTION ---
-    // STATE: Withdraws collateral tokens, reducing backing for borrow position.
-    // SECURITY: Requires authorization - only position owner or authorized managers can withdraw.
-    //           This prevents unauthorized reduction of collateral backing.
-    // SECURITY: Position must remain healthy after withdrawal - enforced by _isHealthy check.
-    // EXTERNAL: Calls oracle.price() via _isHealthy() - oracle manipulation could block withdrawals.
-    // NOTE: Unlike supplyCollateral, this DOES accrue interest because health check needs accurate debt.
+    /// @dev STATE: Withdraws collateral tokens, reducing backing for borrow position.
+    /// @dev SECURITY: Requires authorization - only position owner or authorized managers can withdraw.
+    /// @dev SECURITY: Position must remain healthy after withdrawal - enforced by _isHealthy check.
+    /// @dev EXTERNAL: Calls oracle.price() via _isHealthy() - oracle manipulation could block withdrawals.
+    /// @dev NOTE: Unlike supplyCollateral, this DOES accrue interest because health check needs accurate debt.
     /// @inheritdoc IMorphoBase
     function withdrawCollateral(MarketParams memory marketParams, uint256 assets, address onBehalf, address receiver)
         external
@@ -627,18 +611,13 @@ contract Morpho is IMorphoStaticTyping {
 
     /* LIQUIDATION */
 
-    // --- LIQUIDATE FUNCTION ---
-    // STATE: Liquidates unhealthy positions by repaying debt and seizing collateral at a discount.
-    // SECURITY: Permissionless - anyone can liquidate unhealthy positions. This is by design:
-    //           Economic incentive (liquidation bonus) ensures positions are kept healthy.
-    // MATH: Liquidation Incentive Factor (LIF) formula:
-    //       LIF = min(MAX_LIQUIDATION_INCENTIVE_FACTOR, 1 / (1 - LIQUIDATION_CURSOR * (1 - lltv)))
-    //       LIF = min(1.15, 1 / (1 - 0.3 * (1 - lltv)))
-    //       At LLTV=0.8: LIF = 1/(1-0.3*0.2) = 1/0.94 ~ 1.064 (6.4% bonus)
-    //       At LLTV=0.5: LIF = 1/(1-0.3*0.5) = 1/0.85 ~ 1.176, capped to 1.15 (15% max)
-    // EXTERNAL: Calls oracle.price() - price manipulation could enable unfair liquidations.
-    // BAD DEBT: If collateral == 0 after seizure, remaining debt is socialized to suppliers.
-    //           This is a loss-sharing mechanism - suppliers absorb unrecorverable debt.
+    /// @dev STATE: Liquidates unhealthy positions by repaying debt and seizing collateral at a discount.
+    /// @dev SECURITY: Permissionless - economic incentive (liquidation bonus) ensures positions are kept healthy.
+    /// @dev MATH: LIF = min(1.15, 1 / (1 - 0.3 * (1 - lltv))). At LLTV=0.8: ~6.4% bonus. At LLTV=0.5: capped at 15%.
+    /// @dev MATH: If seizedAssets > 0: repaidShares rounds UP (liquidator repays more). If repaidShares > 0: seizedAssets rounds DOWN (liquidator seizes less).
+    /// @dev EXTERNAL: Calls oracle.price() - price manipulation could enable unfair liquidations.
+    /// @dev INVARIANT: Position must be unhealthy (collateral * price * lltv < borrowed) to be liquidated.
+    /// @dev WARNING: If collateral == 0 after seizure, remaining debt is socialized to suppliers (bad debt).
     /// @inheritdoc IMorphoBase
     function liquidate(
         MarketParams memory marketParams,
@@ -757,14 +736,12 @@ contract Morpho is IMorphoStaticTyping {
 
     /* FLASH LOANS */
 
-    // --- FLASH LOAN FUNCTION ---
-    // STATE: No persistent state changes - tokens borrowed and repaid atomically.
-    // SECURITY: No fee charged - free flash loans for all users.
-    // SECURITY: Access to ALL tokens held by contract, not just specific market tokens.
-    //           This includes: all market loan tokens, all market collateral tokens, and donations.
-    // SECURITY: Callback is REQUIRED - caller must implement IMorphoFlashLoanCallback.
-    //           If callback reverts, entire transaction reverts and tokens remain safe.
-    // SECURITY: Caller must approve Morpho to reclaim tokens via safeTransferFrom.
+    /// @dev STATE: No persistent state changes - tokens borrowed and repaid atomically.
+    /// @dev SECURITY: No fee charged - free flash loans for all users.
+    /// @dev SECURITY: Access to ALL tokens held by contract, not just specific market tokens.
+    /// @dev SECURITY: Callback is REQUIRED - caller must implement IMorphoFlashLoanCallback.
+    /// @dev EXTERNAL: Sends tokens to caller, executes callback, then reclaims tokens.
+    /// @dev VALIDATION: Caller must approve Morpho to reclaim tokens via safeTransferFrom.
     /// @inheritdoc IMorphoBase
     function flashLoan(address token, uint256 assets, bytes calldata data) external {
         // BOUNDS: Must borrow non-zero amount
@@ -792,14 +769,10 @@ contract Morpho is IMorphoStaticTyping {
 
     /* AUTHORIZATION */
 
-    // --- SET AUTHORIZATION FUNCTION ---
-    // STATE: Grants or revokes authorization for another address to manage caller's positions.
-    // SECURITY: Authorizing an address allows them to:
-    //   - withdraw() on behalf of caller (withdraw supply)
-    //   - borrow() on behalf of caller (increase debt)
-    //   - withdrawCollateral() on behalf of caller (reduce collateral)
-    // SECURITY: Authorization can be revoked anytime by calling with newIsAuthorized=false.
-    // NOTE: Self-authorization is implicit (msg.sender == onBehalf always passes auth check).
+    /// @dev STATE: Grants or revokes authorization for another address to manage caller's positions.
+    /// @dev SECURITY: Authorizing allows withdraw(), borrow(), and withdrawCollateral() on behalf of caller.
+    /// @dev SECURITY: Authorization can be revoked anytime by calling with newIsAuthorized=false.
+    /// @dev NOTE: Self-authorization is implicit (msg.sender == onBehalf always passes auth check).
     /// @inheritdoc IMorphoBase
     function setAuthorization(address authorized, bool newIsAuthorized) external {
         // BOUNDS: Prevent no-op state change
@@ -811,12 +784,11 @@ contract Morpho is IMorphoStaticTyping {
         emit EventsLib.SetAuthorization(msg.sender, msg.sender, authorized, newIsAuthorized);
     }
 
-    // --- SET AUTHORIZATION WITH SIGNATURE FUNCTION ---
-    // STATE: Sets authorization using EIP-712 signature, enabling gasless authorization.
-    // SECURITY: Nonce system prevents replay attacks - each nonce usable exactly once.
-    // SECURITY: Deadline provides time-limited authorization windows.
-    // SECURITY: Domain separator is chain-specific to prevent cross-chain replay.
-    // NOTE: Signature malleability (flipping s) has no security impact - same result.
+    /// @dev STATE: Sets authorization using EIP-712 signature, enabling gasless authorization.
+    /// @dev SECURITY: Nonce system prevents replay attacks - each nonce usable exactly once.
+    /// @dev SECURITY: Deadline provides time-limited authorization windows.
+    /// @dev SECURITY: Domain separator is chain-specific to prevent cross-chain replay.
+    /// @dev WARNING: Signature malleability (flipping s) has no security impact - same result.
     /// @inheritdoc IMorphoBase
     function setAuthorizationWithSig(Authorization memory authorization, Signature calldata signature) external {
         // NOTE: Don't check if authorization value already set
@@ -856,10 +828,9 @@ contract Morpho is IMorphoStaticTyping {
         );
     }
 
-    // --- AUTHORIZATION CHECK HELPER ---
-    // SECURITY: Returns true if msg.sender can manage onBehalf's positions.
-    // MATH: authorized = (msg.sender == onBehalf) OR isAuthorized[onBehalf][msg.sender]
-    // NOTE: Self-authorization always passes - users can always manage their own positions.
+    /// @dev SECURITY: Returns true if msg.sender can manage onBehalf's positions.
+    /// @dev MATH: authorized = (msg.sender == onBehalf) OR isAuthorized[onBehalf][msg.sender].
+    /// @dev NOTE: Self-authorization always passes - users can always manage their own positions.
     /// @dev Returns whether the sender is authorized to manage `onBehalf`'s positions.
     function _isSenderAuthorized(address onBehalf) internal view returns (bool) {
         return msg.sender == onBehalf || isAuthorized[onBehalf][msg.sender];
@@ -867,10 +838,10 @@ contract Morpho is IMorphoStaticTyping {
 
     /* INTEREST MANAGEMENT */
 
-    // --- ACCRUE INTEREST PUBLIC FUNCTION ---
-    // STATE: Manually triggers interest accrual for a market.
-    // SECURITY: Permissionless - useful for keepers or before querying accurate balances.
-    // NOTE: No-op if called in same block (elapsed time = 0).
+    /// @dev STATE: Manually triggers interest accrual for a market.
+    /// @dev SECURITY: Permissionless - useful for keepers or before querying accurate balances.
+    /// @dev OPTIMIZATION: No-op if called in same block (elapsed time = 0).
+    /// @dev EXTERNAL: Calls IRM.borrowRate() via _accrueInterest.
     /// @inheritdoc IMorphoBase
     function accrueInterest(MarketParams memory marketParams) external {
         Id id = marketParams.id();
@@ -880,14 +851,12 @@ contract Morpho is IMorphoStaticTyping {
         _accrueInterest(marketParams, id);
     }
 
-    // --- ACCRUE INTEREST INTERNAL FUNCTION ---
-    // STATE: Computes and applies interest accrual for a market.
-    // MATH: Uses continuous compounding approximated via Taylor expansion:
-    //       e^(rt) - 1 approximately equals rt + (rt)^2/2 + (rt)^3/6
-    //       This approximation is accurate for typical interest rates and time periods.
-    // EXTERNAL: Calls IRM.borrowRate(marketParams, market) to get current rate.
-    //           If IRM reverts, entire accrual fails - IRM is a critical dependency.
-    // NOTE: Assumes marketParams and id match (caller responsibility).
+    /// @dev STATE: Computes and applies interest accrual for a market.
+    /// @dev MATH: Uses continuous compounding approximated via Taylor expansion: e^(rt) - 1 ~ rt + (rt)^2/2 + (rt)^3/6.
+    /// @dev EXTERNAL: Calls IRM.borrowRate(marketParams, market) to get current rate - IRM is a critical dependency.
+    /// @dev OPTIMIZATION: Skips accrual if elapsed == 0 (same block) or irm == address(0) (0% APR).
+    /// @dev INVARIANT: Interest increases both totalBorrowAssets and totalSupplyAssets equally (before fees).
+    /// @dev WARNING: If IRM reverts, entire operation fails - malicious IRM can block all market operations.
     /// @dev Accrues interest for the given market `marketParams`.
     /// @dev Assumes that the inputs `marketParams` and `id` match.
     function _accrueInterest(MarketParams memory marketParams, Id id) internal {
@@ -956,12 +925,10 @@ contract Morpho is IMorphoStaticTyping {
 
     /* HEALTH CHECK */
 
-    // --- HEALTH CHECK (3-param) ---
-    // SECURITY: Checks if borrower's position is healthy by querying oracle.
-    // EXTERNAL: Calls oracle.price() - oracle is single point of failure for health checks.
-    //           Oracle manipulation could incorrectly mark positions healthy/unhealthy.
-    // OPTIMIZATION: Returns true immediately if no debt (skips oracle call).
-    // NOTE: Assumes marketParams and id match (caller responsibility).
+    /// @dev SECURITY: Checks if borrower's position is healthy by querying oracle.
+    /// @dev EXTERNAL: Calls oracle.price() - oracle is single point of failure for health checks.
+    /// @dev OPTIMIZATION: Returns true immediately if no debt (skips oracle call).
+    /// @dev NOTE: Assumes marketParams and id match (caller responsibility).
     /// @dev Returns whether the position of `borrower` in the given market `marketParams` is healthy.
     /// @dev Assumes that the inputs `marketParams` and `id` match.
     function _isHealthy(MarketParams memory marketParams, Id id, address borrower) internal view returns (bool) {
@@ -977,17 +944,11 @@ contract Morpho is IMorphoStaticTyping {
         return _isHealthy(marketParams, id, borrower, collateralPrice);
     }
 
-    // --- HEALTH CHECK (4-param) ---
-    // MATH: Checks health using provided price (avoids redundant oracle calls).
-    // MATH: Formula: healthy = (collateral * price / 1e36 * lltv) >= borrowed
-    //       This means: collateral value * lltv ratio >= debt value
-    //       Example: 100 ETH collateral, price=2000e36, LLTV=0.8
-    //                maxBorrow = 100 * 2000 * 0.8 = 160,000 loan tokens
-    // ROUNDING: All operations favor protocol:
-    //   - borrowed rounds UP (borrower appears to owe more)
-    //   - maxBorrow rounds DOWN (borrower can borrow less)
-    //   This means positions right at the boundary are considered unhealthy.
-    // NOTE: Assumes marketParams and id match (caller responsibility).
+    /// @dev MATH: Checks health using provided price (avoids redundant oracle calls).
+    /// @dev MATH: Formula: healthy = (collateral * price / 1e36 * lltv) >= borrowed.
+    /// @dev MATH: borrowed rounds UP (borrower appears to owe more). maxBorrow rounds DOWN (borrower can borrow less).
+    /// @dev SECURITY: Positions right at the boundary are considered unhealthy (protocol favored rounding).
+    /// @dev NOTE: Assumes marketParams and id match (caller responsibility).
     /// @dev Returns whether the position of `borrower` in the given market `marketParams` with the given
     /// `collateralPrice` is healthy.
     /// @dev Assumes that the inputs `marketParams` and `id` match.
@@ -1024,6 +985,10 @@ contract Morpho is IMorphoStaticTyping {
 
     /* STORAGE VIEW */
 
+    /// @dev SECURITY: Read-only storage access - cannot modify state.
+    /// @dev EXTERNAL: Used by periphery libraries (MorphoLib) to efficiently read storage slots.
+    /// @dev OPTIMIZATION: Allows batch reading multiple slots in a single call.
+    /// @dev NOTE: Callers must know exact storage layout (see MorphoStorageLib for slot calculations).
     /// @inheritdoc IMorphoBase
     function extSloads(bytes32[] calldata slots) external view returns (bytes32[] memory res) {
         uint256 nSlots = slots.length;
