@@ -18,7 +18,9 @@ Your job is to categorize all contracts, interfaces, and libraries into a struct
 
 ## Execution Steps
 
-1. Read `magic/pre-audit/information-needed.md`
+1. Read `magic/pre-audit/information-needed.md`. If it contains a `PARTS:` index, read ALL listed part files as well — they contain the FILE sections.
+   - Skip any FILE section marked with `PARSE_ERROR` — note it in your output as a skipped file
+   - Treat any field set to `[none]` as absent (not extracted)
 2. Parse the META section for project_type and source_dir
 3. Parse all FILE sections, extracting:
    - File path

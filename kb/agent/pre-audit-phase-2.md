@@ -18,7 +18,9 @@ Your job is to analyze all dependencies between contracts: imports, inheritance,
 
 ## Execution Steps
 
-1. Read `magic/pre-audit/information-needed.md`
+1. Read `magic/pre-audit/information-needed.md`. If it contains a `PARTS:` index, read ALL listed part files as well — they contain the FILE sections.
+   - Skip any FILE section marked with `PARSE_ERROR` — note it in your output as a skipped file
+   - Treat any field set to `[none]` as absent (not extracted)
 2. Parse all FILE sections, extracting:
    - IMPORTS
    - INHERITS

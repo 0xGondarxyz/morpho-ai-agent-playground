@@ -18,12 +18,14 @@ Your job is to document the deployment pattern: what order contracts must be dep
 
 ## Execution Steps
 
-1. Read `magic/pre-audit/information-needed.md`
+1. Read `magic/pre-audit/information-needed.md`. If it contains a `PARTS:` index, read ALL listed part files as well — they contain the FILE sections.
+   - Skip any FILE section marked with `PARSE_ERROR` — note it in your output as a skipped file
+   - Treat any field set to `[none]` as absent (not extracted)
 
 2. TRY to read `magic/pre-audit/deployment-dependencies.md`:
 
    - If it exists, use the dependency analysis to inform deployment order
-   - If it does not exist, extract dependency information directly from the cache in step 1
+   - If it does not exist, extract dependency information directly from `magic/pre-audit/information-needed.md` in step 1
 
 3. Parse FILE sections for:
    - CONSTRUCTOR signatures and parameters
@@ -40,7 +42,7 @@ Your job is to document the deployment pattern: what order contracts must be dep
 
 ## Fallback Behavior
 
-If cache files do not exist or are incomplete:
+If `magic/pre-audit/information-needed.md` does not exist or is incomplete:
 
 1. Detect source directory
 2. Glob for .sol files in {src}

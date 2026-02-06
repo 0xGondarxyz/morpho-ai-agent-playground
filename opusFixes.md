@@ -87,7 +87,7 @@ No significant ambiguities found. Well-designed for agnosticity.
 
 | # | Issue | Severity | Fix |
 |---|-------|----------|-----|
-| 1 | **No parallelization guidance** — phases 1+2 are independent, phases 4+5+6 are independent, but nothing says they can run in parallel | Medium | NOT YET APPLIED — Needs dependency graph |
-| 2 | **Terminology inconsistency** — phase 0 output called "cache", "information-needed.md", "raw data" interchangeably | Low | Partially fixed in phases 0 and 1 |
-| 3 | **No edge-case guidance** — syntax errors, zero test files, no README, auto-generated files | Medium | Partially fixed in phase 0 (PARSE_ERROR, [none] convention) |
-| 4 | **Context window risk** — phase 0 output for large codebases could exceed downstream agent limits | High | Fixed in phase 0 with split-file strategy |
+| 1 | **No parallelization guidance** — phases 1+2 are independent, phases 4+5+6 are independent, but nothing says they can run in parallel | Medium | NOT APPLIED — decided unnecessary |
+| 2 | **Terminology inconsistency** — phase 0 output called "cache", "information-needed.md", "raw data" interchangeably | Low | APPLIED — All "cache" references replaced with explicit file paths across all phases (1-9). Phases 3 and 4 were the last remaining |
+| 3 | **No edge-case guidance** — syntax errors, zero test files, no README, auto-generated files | Medium | APPLIED — Phase 0 emits `PARSE_ERROR` and `[none]` markers. All downstream phases (1-9) now have handling instructions: skip PARSE_ERROR files (log in output), treat `[none]` as absent. Phase 9 specifically won't attempt to modify files with parse errors |
+| 4 | **Context window risk** — phase 0 output for large codebases could exceed downstream agent limits | High | APPLIED — Phase 0 splits into part files with PARTS index. All downstream phases (1-9) now check for PARTS index and read all listed part files |

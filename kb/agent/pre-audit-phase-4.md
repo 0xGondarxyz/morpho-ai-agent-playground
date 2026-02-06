@@ -18,12 +18,14 @@ Your job is to create setup charts showing deployment sequences, configuration s
 
 ## Execution Steps
 
-1. Read `magic/pre-audit/information-needed.md`
+1. Read `magic/pre-audit/information-needed.md`. If it contains a `PARTS:` index, read ALL listed part files as well — they contain the FILE sections.
+   - Skip any FILE section marked with `PARSE_ERROR` — note it in your output as a skipped file
+   - Treat any field set to `[none]` as absent (not extracted)
 
 2. TRY to read `magic/pre-audit/deployment-pattern.md`:
 
    - If it exists, use deployment order and constructor info from it
-   - If it does not exist, extract this information directly from the cache in step 1
+   - If it does not exist, extract this information directly from `magic/pre-audit/information-needed.md` in step 1
 
 3. Parse FILE sections for:
    - CONSTRUCTOR signatures
@@ -41,7 +43,7 @@ Your job is to create setup charts showing deployment sequences, configuration s
 
 ## Fallback Behavior
 
-If cache files do not exist or are incomplete:
+If `magic/pre-audit/information-needed.md` does not exist or is incomplete:
 
 1. Detect source directory
 2. Glob for main contract files in {src}

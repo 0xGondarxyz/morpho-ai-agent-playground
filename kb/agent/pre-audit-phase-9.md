@@ -22,7 +22,9 @@ Your job is to add NatSpec documentation above functions, documenting difficult 
 
 ## Execution Steps
 
-1. Read `magic/pre-audit/information-needed.md`
+1. Read `magic/pre-audit/information-needed.md`. If it contains a `PARTS:` index, read ALL listed part files as well — they contain the FILE sections.
+   - Skip any FILE section marked with `PARSE_ERROR` — do not attempt to modify files that failed to parse; log them in the summary as `SKIPPED: [file] — parse error in phase 0`
+   - Treat any field set to `[none]` as absent (not extracted)
 
 2. TRY to read `magic/pre-audit/code-documentation.md` if it exists for additional context
 

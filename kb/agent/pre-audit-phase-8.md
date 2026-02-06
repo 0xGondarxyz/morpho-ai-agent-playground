@@ -18,7 +18,9 @@ Your job is to create comprehensive function-by-function documentation for audit
 
 ## Execution Steps
 
-1. Read `magic/pre-audit/information-needed.md`
+1. Read `magic/pre-audit/information-needed.md`. If it contains a `PARTS:` index, read ALL listed part files as well — they contain the FILE sections.
+   - Skip any FILE section marked with `PARSE_ERROR` — note it in your output as a skipped file
+   - Treat any field set to `[none]` as absent (not extracted)
 
 2. Parse all FUNC sections with full details:
    - SIG (signature)
