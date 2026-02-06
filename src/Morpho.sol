@@ -299,16 +299,33 @@ contract Morpho is IMorphoStaticTyping {
 
     /* SUPPLY MANAGEMENT */
 
-    // --- SUPPLY FUNCTION ---
-    // STATE: Deposits loan tokens into market, crediting supply shares to onBehalf.
-    // SECURITY: Permissionless - anyone can supply on behalf of any address (no authorization needed).
-    //           This is safe because supplying only benefits the recipient.
-    // SECURITY: Callback executes AFTER state update but BEFORE token transfer (CEI pattern).
-    //           Caller can use callback to source funds (flash-mint pattern).
-    // MATH: shares = assets * (totalShares + VIRTUAL_SHARES) / (totalAssets + VIRTUAL_ASSETS)
-    //       Virtual shares (1e6) and virtual assets (1) prevent share inflation attacks.
-    // MATH: Rounding - assets to shares rounds DOWN (protocol favored).
     /// @inheritdoc IMorphoBase
+    /// @dev STATE: Deposits loan tokens into market, crediting supply shares to onBehalf.
+    /// @dev SECURITY: Permissionless - anyone can supply on behalf of any address (no authorization needed).
+    /// @dev SECURITY: This is safe because supplying only benefits the recipient.
+    /// @dev SECURITY: Callback executes AFTER state update but BEFORE token transfer (CEI pattern).
+    /// @dev SECURITY: Caller can use callback to source funds (flash-mint pattern).
+    /// @dev SECURITY: Callback AFTER state update (CEI pattern).
+    /// @dev SECURITY: Caller can use callback to source funds (e.g., flash loan to get tokens).
+    /// @dev SECURITY: If callback reverts, entire transaction reverts and state changes are undone.
+    /// @dev MATH: shares = assets * (totalShares + VIRTUAL_SHARES) / (totalAssets + VIRTUAL_ASSETS).
+    /// @dev MATH: Virtual shares (1e6) and virtual assets (1) prevent share inflation attacks.
+    /// @dev MATH: Rounding - assets to shares rounds DOWN (protocol favored).
+    /// @dev MATH: Convert between assets and shares based on current exchange rate.
+    /// @dev MATH: sharePrice = (totalAssets + 1) / (totalShares + 1e6) [with rounding].
+    /// @dev MATH: If assets > 0: assets → shares, rounds DOWN. User receives fewer shares (protocol gets slightly more value per share).
+    /// @dev MATH: If shares > 0: shares → assets, rounds UP. User pays slightly more assets to receive exact shares requested.
+    /// @dev BOUNDS: Market must exist (lastUpdate > 0 indicates market was created).
+    /// @dev BOUNDS: Exactly one of assets/shares must be 0 - prevents ambiguous input.
+    /// @dev BOUNDS: User specifies EITHER how many assets to supply OR how many shares to receive.
+    /// @dev BOUNDS: Cannot credit shares to zero address.
+    /// @dev BOUNDS: toUint128() reverts if value > type(uint128).max (~3.4e38).
+    /// @dev STATE: Accrue interest first to ensure accurate share pricing.
+    /// @dev STATE: Interest must be up-to-date before computing share conversion.
+    /// @dev STATE: Update position and market totals.
+    /// @dev NOTE: supplyShares is uint256, so no overflow check needed for addition.
+    /// @dev EXTERNAL: Token transfer last - completes CEI pattern.
+    /// @dev EXTERNAL: If user lacks tokens or approval, transfer fails and all changes revert.
     function supply(
         MarketParams memory marketParams,
         uint256 assets,
@@ -317,46 +334,26 @@ contract Morpho is IMorphoStaticTyping {
         bytes calldata data
     ) external returns (uint256, uint256) {
         Id id = marketParams.id();
-        // BOUNDS: Market must exist (lastUpdate > 0 indicates market was created)
         require(market[id].lastUpdate != 0, ErrorsLib.MARKET_NOT_CREATED);
-        // BOUNDS: Exactly one of assets/shares must be 0 - prevents ambiguous input
-        // User specifies EITHER how many assets to supply OR how many shares to receive
         require(UtilsLib.exactlyOneZero(assets, shares), ErrorsLib.INCONSISTENT_INPUT);
-        // BOUNDS: Cannot credit shares to zero address
         require(onBehalf != address(0), ErrorsLib.ZERO_ADDRESS);
 
-        // STATE: Accrue interest first to ensure accurate share pricing
-        // Interest must be up-to-date before computing share conversion
         _accrueInterest(marketParams, id);
 
-        // MATH: Convert between assets and shares based on current exchange rate
-        // sharePrice = (totalAssets + 1) / (totalShares + 1e6) [with rounding]
         if (assets > 0) {
-            // MATH: assets → shares, rounds DOWN
-            // User receives fewer shares (protocol gets slightly more value per share)
             shares = assets.toSharesDown(market[id].totalSupplyAssets, market[id].totalSupplyShares);
         } else {
-            // MATH: shares → assets, rounds UP
-            // User pays slightly more assets to receive exact shares requested
             assets = shares.toAssetsUp(market[id].totalSupplyAssets, market[id].totalSupplyShares);
         }
 
-        // STATE: Update position and market totals
-        // BOUNDS: toUint128() reverts if value > type(uint128).max (~3.4e38)
-        // NOTE: supplyShares is uint256, so no overflow check needed for addition
         position[id][onBehalf].supplyShares += shares;
         market[id].totalSupplyShares += shares.toUint128();
         market[id].totalSupplyAssets += assets.toUint128();
 
         emit EventsLib.Supply(id, msg.sender, onBehalf, assets, shares);
 
-        // SECURITY: Callback AFTER state update (CEI pattern)
-        // Caller can use callback to source funds (e.g., flash loan to get tokens)
-        // If callback reverts, entire transaction reverts and state changes are undone
         if (data.length > 0) IMorphoSupplyCallback(msg.sender).onMorphoSupply(assets, data);
 
-        // EXTERNAL: Token transfer last - completes CEI pattern
-        // If user lacks tokens or approval, transfer fails and all changes revert
         IERC20(marketParams.loanToken).safeTransferFrom(msg.sender, address(this), assets);
 
         return (assets, shares);

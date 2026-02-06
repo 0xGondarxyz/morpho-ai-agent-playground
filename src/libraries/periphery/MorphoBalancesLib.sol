@@ -14,9 +14,11 @@ import {MarketParamsLib} from "../MarketParamsLib.sol";
 /// @author Morpho Labs
 /// @custom:contact security@morpho.org
 /// @notice Helper library exposing getters with the expected value after interest accrual.
-/// @dev This library is not used in Morpho itself and is intended to be used by integrators.
-/// @dev The getter to retrieve the expected total borrow shares is not exposed because interest accrual does not apply
-/// to it. The value can be queried directly on Morpho using `totalBorrowShares`.
+/// @dev SECURITY: View-only simulation of interest accrual - does NOT modify Morpho state.
+/// @dev SECURITY: Calls IRM.borrowRateView() (view function) instead of borrowRate() (may modify state).
+/// @dev NOTE: This library is NOT used in Morpho itself - intended for integrators needing accurate values.
+/// @dev NOTE: totalBorrowShares is not exposed because it doesn't change with interest accrual.
+/// @dev MATH: Simulates the exact same interest calculation as Morpho._accrueInterest().
 library MorphoBalancesLib {
     using MathLib for uint256;
     using MathLib for uint128;
@@ -26,10 +28,14 @@ library MorphoBalancesLib {
     using MarketParamsLib for MarketParams;
 
     /// @notice Returns the expected market balances of a market after having accrued interest.
-    /// @return The expected total supply assets.
-    /// @return The expected total supply shares.
-    /// @return The expected total borrow assets.
-    /// @return The expected total borrow shares.
+    /// @dev MATH: Simulates interest accrual without modifying state.
+    /// @dev MATH: Uses same Taylor expansion as Morpho: e^(rt) - 1 approx rt + (rt)^2/2 + (rt)^3/6.
+    /// @dev EXTERNAL: Calls IRM.borrowRateView() - view-only rate query.
+    /// @dev OPTIMIZATION: Skips calculation if elapsed=0, totalBorrowAssets=0, or irm=address(0).
+    /// @return The expected total supply assets (includes accrued interest).
+    /// @return The expected total supply shares (includes fee shares if fee > 0).
+    /// @return The expected total borrow assets (includes accrued interest).
+    /// @return The expected total borrow shares (unchanged - shares don't accrue).
     function expectedMarketBalances(IMorpho morpho, MarketParams memory marketParams)
         internal
         view
@@ -40,7 +46,10 @@ library MorphoBalancesLib {
 
         uint256 elapsed = block.timestamp - market.lastUpdate;
 
-        // Skipped if elapsed == 0 or totalBorrowAssets == 0 because interest would be null, or if irm == address(0).
+        // OPTIMIZATION: Skip if no interest would accrue
+        // - elapsed == 0: same block, no time passed
+        // - totalBorrowAssets == 0: no debt to accrue interest on
+        // - irm == address(0): 0% APR market
         if (elapsed != 0 && market.totalBorrowAssets != 0 && marketParams.irm != address(0)) {
             uint256 borrowRate = IIrm(marketParams.irm).borrowRateView(marketParams, market);
             uint256 interest = market.totalBorrowAssets.wMulDown(borrowRate.wTaylorCompounded(elapsed));
@@ -88,7 +97,11 @@ library MorphoBalancesLib {
     }
 
     /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
-    /// @dev Warning: Wrong for `feeRecipient` because their supply shares increase is not taken into account.
+    /// @dev MATH: assets = supplyShares * expectedTotalAssets / expectedTotalShares.
+    /// @dev MATH: Rounds DOWN - user's actual redeemable amount is never overestimated.
+    /// @dev WARNING: INCORRECT for `feeRecipient` - their share increase from fees is not included.
+    /// @dev WARNING: For feeRecipient, actual assets would be higher than this returns.
+    /// @dev NOTE: For non-feeRecipient users, this is accurate.
     function expectedSupplyAssets(IMorpho morpho, MarketParams memory marketParams, address user)
         internal
         view
@@ -102,8 +115,11 @@ library MorphoBalancesLib {
     }
 
     /// @notice Returns the expected borrow assets balance of `user` on a market after having accrued interest.
-    /// @dev Warning: The expected balance is rounded up, so it may be greater than the market's expected total borrow
-    /// assets.
+    /// @dev MATH: assets = borrowShares * expectedTotalBorrowAssets / expectedTotalBorrowShares.
+    /// @dev MATH: Rounds UP - user's actual debt is never underestimated.
+    /// @dev SECURITY: Rounding UP ensures displayed debt is always >= actual debt.
+    /// @dev WARNING: Due to rounding UP, sum of all user debts may exceed totalBorrowAssets.
+    /// @dev WARNING: This is expected behavior - individual debts are conservative estimates.
     function expectedBorrowAssets(IMorpho morpho, MarketParams memory marketParams, address user)
         internal
         view

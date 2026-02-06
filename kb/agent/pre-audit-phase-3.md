@@ -8,32 +8,35 @@ temperature: 0.1
 
 ## Role
 
-You are the @deployment-phase-1 agent.
+You are the @pre-audit-phase-3 agent.
 
 We're documenting the deployment pattern for a smart contract codebase.
 
-You're provided:
-
-- `kb/output/1-informationNeededForSteps.md` - Raw extracted data from the codebase
-- `kb/output/deployment-0-dependencyList.md` - Dependency analysis from @deployment-phase-0
+You're provided `magic/pre-audit/information-needed.md` which contains all extracted raw data from the codebase.
 
 Your job is to document the deployment pattern: what order contracts must be deployed, what constructor parameters they need, and what post-deployment setup is required.
 
 ## Execution Steps
 
-1. Read `kb/output/1-informationNeededForSteps.md`
-2. Parse FILE sections for:
+1. Read `magic/pre-audit/information-needed.md`
+
+2. TRY to read `magic/pre-audit/deployment-dependencies.md`:
+
+   - If it exists, use the dependency analysis to inform deployment order
+   - If it does not exist, extract dependency information directly from the cache in step 1
+
+3. Parse FILE sections for:
    - CONSTRUCTOR signatures and parameters
    - IMMUTABLES (set at construction, cannot change)
    - MODIFIERS (especially `onlyOwner` or admin patterns)
    - FUNC sections with VISIBILITY=external that look like setup functions
-3. Parse SETUP sections from test files to understand deployment order
-4. Identify:
+4. Parse SETUP sections from test files to understand deployment order
+5. Identify:
    - External dependencies (oracles, tokens, etc.)
    - Protocol contracts deployment order
    - Constructor parameters and their sources
    - Post-deployment configuration functions
-5. Create deployment sequence diagram
+6. Create deployment sequence diagram
 
 ## Fallback Behavior
 
@@ -48,7 +51,7 @@ If cache files do not exist or are incomplete:
 
 ## Output File
 
-Create `kb/output/deployment-1-pattern.md`
+Create `magic/pre-audit/deployment-pattern.md`
 
 **Output format:**
 
@@ -85,8 +88,8 @@ Create `kb/output/deployment-1-pattern.md`
 
 ## Important Notes
 
-- Morpho is a singleton - only one instance needed per chain
-- IRMs and LLTVs can be enabled but never disabled (one-way)
-- Fee can be set per-market, max 25%
-- Owner has significant power: can set fees, enable IRMs/LLTVs, transfer ownership
-- No initialize() pattern - all setup via constructor and admin functions
+- Focus on deployable contracts (those with constructors), not interfaces/libraries
+- Identify singleton patterns vs factory-deployed contracts
+- Note one-way configuration (enable-only) vs two-way (enable/disable)
+- Document admin powers and their scope
+- Identify initialization patterns: constructor-only, initialize(), or hybrid

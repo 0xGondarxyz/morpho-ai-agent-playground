@@ -1,58 +1,68 @@
-# KB Generation - Execution Commands
+# Knowledge Base Generation - Execution Commands
 
 ## Agent Files
 
 ```
 kb/agent/
-├── 1-information-gathering-phase.md
-├── 2-contract-discovery-phase.md
-├── 3-deployment-phase-0.md
-├── 3-deployment-phase-1.md
-├── 4-charts-phase-0.md
-├── 4-charts-phase-1.md
-├── 4-charts-phase-2.md
-├── 5-overview-phase.md
-├── 6-documentation-phase.md
-└── 7-inline-docs-phase.md
+├── pre-audit-phase-0.md   (Information Gathering)
+├── pre-audit-phase-1.md   (Contract Discovery)
+├── pre-audit-phase-2.md   (Deployment Dependencies)
+├── pre-audit-phase-3.md   (Deployment Pattern)
+├── pre-audit-phase-4.md   (Setup Charts)
+├── pre-audit-phase-5.md   (Role Charts)
+├── pre-audit-phase-6.md   (Usage Flows)
+├── pre-audit-phase-7.md   (System Overview)
+├── pre-audit-phase-8.md   (Code Documentation)
+├── pre-audit-phase-9.md   (Inline Docs - Modifies Source)
+├── pre-audit-phase-10.md  (Simplification Suggestions)
+└── pre-audit-phase-11.md  (Formal Verification Suggestions)
 ```
 
 ---
 
-## Total Execution (All Steps 1-7)
+## Total Execution (All Steps 0-11)
 
 ```
-Execute all KB generation agents in order.
+Execute all Knowledge Base generation agents in order.
 
 Read and execute each file in kb/agent/ following this order:
-1. 1-information-gathering-phase.md
-2. 2-contract-discovery-phase.md
-3. 3-deployment-phase-0.md, then 3-deployment-phase-1.md
-4. 4-charts-phase-0.md, then 4-charts-phase-1.md, then 4-charts-phase-2.md
-5. 5-overview-phase.md
-6. 6-documentation-phase.md
-7. 7-inline-docs-phase.md
-
-For steps with multiple phases (3, 4), execute phase-0 first, then phase-1, then phase-2.
+0. pre-audit-phase-0.md
+1. pre-audit-phase-1.md
+2. pre-audit-phase-2.md
+3. pre-audit-phase-3.md
+4. pre-audit-phase-4.md
+5. pre-audit-phase-5.md
+6. pre-audit-phase-6.md
+7. pre-audit-phase-7.md
+8. pre-audit-phase-8.md
+9. pre-audit-phase-9.md
+10. pre-audit-phase-10.md
+11. pre-audit-phase-11.md
 
 Execute now.
 ```
 
 ---
 
-## Total Execution (KB Only, No Source Modification)
+## Total Execution (Knowledge Base Only, No Source Modification)
 
 ```
-Execute KB generation agents for Steps 1-6 only.
+Execute Knowledge Base generation agents for Steps 0-8, 10-11 only.
 
 Read and execute each file in kb/agent/ following this order:
-1. 1-information-gathering-phase.md
-2. 2-contract-discovery-phase.md
-3. 3-deployment-phase-0.md, then 3-deployment-phase-1.md
-4. 4-charts-phase-0.md, then 4-charts-phase-1.md, then 4-charts-phase-2.md
-5. 5-overview-phase.md
-6. 6-documentation-phase.md
+0. pre-audit-phase-0.md
+1. pre-audit-phase-1.md
+2. pre-audit-phase-2.md
+3. pre-audit-phase-3.md
+4. pre-audit-phase-4.md
+5. pre-audit-phase-5.md
+6. pre-audit-phase-6.md
+7. pre-audit-phase-7.md
+8. pre-audit-phase-8.md
+10. pre-audit-phase-10.md
+11. pre-audit-phase-11.md
 
-Do NOT execute Step 7 (7-inline-docs-phase.md) which modifies source files.
+Do NOT execute Step 9 (pre-audit-phase-9.md) which modifies source files.
 
 Execute now.
 ```
@@ -62,26 +72,28 @@ Execute now.
 ## Parallel Execution (After Cache)
 
 ```
-Execute KB generation with parallel agents where possible.
+Execute Knowledge Base generation with parallel agents where possible.
 
 Phase 1 (Sequential - Required First):
-- Execute 1-information-gathering-phase.md
+- Execute pre-audit-phase-0.md
 
 Phase 2 (Parallel - All can run simultaneously):
 Spawn parallel agents for:
-- 2-contract-discovery-phase.md
-- 3-deployment-phase-0.md
-- 4-charts-phase-0.md
-- 4-charts-phase-1.md
-- 4-charts-phase-2.md
-- 5-overview-phase.md
-- 6-documentation-phase.md
+- pre-audit-phase-1.md
+- pre-audit-phase-2.md
+- pre-audit-phase-4.md
+- pre-audit-phase-5.md
+- pre-audit-phase-6.md
+- pre-audit-phase-7.md
+- pre-audit-phase-8.md
+- pre-audit-phase-10.md
+- pre-audit-phase-11.md
 
 Phase 3 (Sequential - After Phase 2):
-- Execute 3-deployment-phase-1.md (depends on 3-deployment-phase-0.md output)
+- Execute pre-audit-phase-3.md (depends on pre-audit-phase-2.md output)
 
 Phase 4 (Optional - Source Modification):
-- Execute 7-inline-docs-phase.md
+- Execute pre-audit-phase-9.md
 
 Execute now.
 ```
@@ -90,99 +102,97 @@ Execute now.
 
 ## Separate Execution - Individual Steps
 
-### Step 1: Information Gathering
+### Phase 0: Information Gathering
 ```
-Read and execute kb/agent/1-information-gathering-phase.md
-```
-
-### Step 2: Contract Discovery
-```
-Read and execute kb/agent/2-contract-discovery-phase.md
+Read and execute kb/agent/pre-audit-phase-0.md
 ```
 
-### Step 3: Deployment (Both Phases)
+### Phase 1: Contract Discovery
 ```
-Read and execute kb/agent/3-deployment-phase-0.md
-Then read and execute kb/agent/3-deployment-phase-1.md
-```
-
-### Step 3 Phase 0 Only: Dependencies
-```
-Read and execute kb/agent/3-deployment-phase-0.md
+Read and execute kb/agent/pre-audit-phase-1.md
 ```
 
-### Step 3 Phase 1 Only: Deployment Pattern
+### Phase 2: Deployment Dependencies
 ```
-Read and execute kb/agent/3-deployment-phase-1.md
-```
-
-### Step 4: Charts (All Phases)
-```
-Read and execute kb/agent/4-charts-phase-0.md
-Then read and execute kb/agent/4-charts-phase-1.md
-Then read and execute kb/agent/4-charts-phase-2.md
+Read and execute kb/agent/pre-audit-phase-2.md
 ```
 
-### Step 4 Phase 0 Only: Setup Charts
+### Phase 3: Deployment Pattern
 ```
-Read and execute kb/agent/4-charts-phase-0.md
-```
-
-### Step 4 Phase 1 Only: Role Charts
-```
-Read and execute kb/agent/4-charts-phase-1.md
+Read and execute kb/agent/pre-audit-phase-3.md
 ```
 
-### Step 4 Phase 2 Only: Usage Flows
+### Phase 4: Setup Charts
 ```
-Read and execute kb/agent/4-charts-phase-2.md
-```
-
-### Step 5: System Overview
-```
-Read and execute kb/agent/5-overview-phase.md
+Read and execute kb/agent/pre-audit-phase-4.md
 ```
 
-### Step 6: Code Documentation
+### Phase 5: Role Charts
 ```
-Read and execute kb/agent/6-documentation-phase.md
+Read and execute kb/agent/pre-audit-phase-5.md
 ```
 
-### Step 7: Inline Documentation (Modifies Source)
+### Phase 6: Usage Flows
 ```
-Read and execute kb/agent/7-inline-docs-phase.md
+Read and execute kb/agent/pre-audit-phase-6.md
+```
+
+### Phase 7: System Overview
+```
+Read and execute kb/agent/pre-audit-phase-7.md
+```
+
+### Phase 8: Code Documentation
+```
+Read and execute kb/agent/pre-audit-phase-8.md
+```
+
+### Phase 9: Inline Documentation (Modifies Source)
+```
+Read and execute kb/agent/pre-audit-phase-9.md
 
 WARNING: This step modifies source files by adding inline comments.
+```
+
+### Phase 10: Code Simplification Suggestions
+```
+Read and execute kb/agent/pre-audit-phase-10.md
+```
+
+### Phase 11: Formal Verification Suggestions
+```
+Read and execute kb/agent/pre-audit-phase-11.md
 ```
 
 ---
 
 ## Output Files
 
-| Step | Phase | Agent File | Output |
-|------|-------|------------|--------|
-| 1 | - | 1-information-gathering-phase.md | `kb/output/1-informationNeededForSteps.md` |
-| 2 | - | 2-contract-discovery-phase.md | `kb/output/2-contractsList.md` |
-| 3 | 0 | 3-deployment-phase-0.md | `kb/output/deployment-0-dependencyList.md` |
-| 3 | 1 | 3-deployment-phase-1.md | `kb/output/deployment-1-pattern.md` |
-| 4 | 0 | 4-charts-phase-0.md | `kb/output/charts-0-setup.md` |
-| 4 | 1 | 4-charts-phase-1.md | `kb/output/charts-1-roles.md` |
-| 4 | 2 | 4-charts-phase-2.md | `kb/output/charts-2-flows.md` |
-| 5 | - | 5-overview-phase.md | `kb/output/5-overview.md` |
-| 6 | - | 6-documentation-phase.md | `kb/output/6-codeDocumentation.md` |
-| 7 | - | 7-inline-docs-phase.md | `src/*.sol` (modified) + `kb/output/7-inline-docs-summary.md` |
+| Phase | Agent File | Output |
+|-------|------------|--------|
+| 0 | pre-audit-phase-0.md | `magic/pre-audit/information-needed.md` |
+| 1 | pre-audit-phase-1.md | `magic/pre-audit/contracts-list.md` |
+| 2 | pre-audit-phase-2.md | `magic/pre-audit/deployment-dependencies.md` |
+| 3 | pre-audit-phase-3.md | `magic/pre-audit/deployment-pattern.md` |
+| 4 | pre-audit-phase-4.md | `magic/pre-audit/charts-setup.md` |
+| 5 | pre-audit-phase-5.md | `magic/pre-audit/charts-roles.md` |
+| 6 | pre-audit-phase-6.md | `magic/pre-audit/charts-flows.md` |
+| 7 | pre-audit-phase-7.md | `magic/pre-audit/overview.md` |
+| 8 | pre-audit-phase-8.md | `magic/pre-audit/code-documentation.md` |
+| 9 | pre-audit-phase-9.md | `src/*.sol` (modified) + `magic/pre-audit/inline-docs-summary.md` |
+| 10 | pre-audit-phase-10.md | `magic/pre-audit/simplification-suggestions.md` |
+| 11 | pre-audit-phase-11.md | `magic/pre-audit/formal-verification-spec.md` |
 
 ---
 
 ## Run Range of Steps
 
 ```
-Execute KB generation agents for Steps [X] through [Y].
+Execute Knowledge Base generation agents for Steps [X] through [Y].
 
 Read and execute files in kb/agent/ for steps [X] to [Y] in order.
-For multi-phase steps, execute all phases (phase-0, phase-1, phase-2) in order.
 
 Execute now.
 ```
 
-Replace `[X]` and `[Y]` with step numbers (1-7).
+Replace `[X]` and `[Y]` with step numbers (0-11).

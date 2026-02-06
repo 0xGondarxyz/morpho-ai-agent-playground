@@ -8,17 +8,17 @@ temperature: 0.1
 
 ## Role
 
-You are the @charts-phase-1 agent.
+You are the @pre-audit-phase-5 agent.
 
 We're creating visual charts for a smart contract codebase to assist auditors and developers.
 
-You're provided `kb/output/1-informationNeededForSteps.md` which contains all extracted raw data from the codebase.
+You're provided `magic/pre-audit/information-needed.md` which contains all extracted raw data from the codebase.
 
 Your job is to create role charts showing access control patterns, permission matrices, and role hierarchies.
 
 ## Execution Steps
 
-1. Read `kb/output/1-informationNeededForSteps.md`
+1. Read `magic/pre-audit/information-needed.md`
 2. Parse FILE sections for:
    - MODIFIERS definitions (onlyOwner, isAuthorized, etc.)
    - FUNC sections with MODIFIERS field showing access control
@@ -31,7 +31,7 @@ Your job is to create role charts showing access control patterns, permission ma
 
 ## Fallback Behavior
 
-If cache files do not exist or are incomplete:
+If `magic/pre-audit/information-needed.md` does not exist or is incomplete:
 
 1. Detect source directory
 2. Glob for .sol files in {src}
@@ -41,7 +41,7 @@ If cache files do not exist or are incomplete:
 
 ## Output File
 
-Create `kb/output/charts-1-roles.md`
+Create `magic/pre-audit/charts-roles.md`
 
 **Output format:**
 
@@ -72,7 +72,13 @@ Create `kb/output/charts-1-roles.md`
 
 ## Important Notes
 
-- Owner role is critical - can set fees, enable IRMs/LLTVs
-- Authorization is per-address, not per-market (global delegation)
-- Some actions (supply, repay) are permissionless for any onBehalf address
-- Withdrawal/borrow actions require authorization if acting on behalf of another
+- Identify the most privileged role and document its powers
+- Distinguish between global vs scoped authorization. Global means the role applies protocol-wide (e.g., a single owner for the whole system). Scoped means the role applies per-resource or per-instance (e.g., per-pool, per-vault, per-token-id, per-pair — whatever the protocol's unit of isolation is). Document the scope boundary when scoped authorization is found.
+- Note which actions are permissionless vs require authorization
+- Document "on behalf of" patterns (where address A can act for address B) and their access control requirements
+- Look for role-based access beyond simple `onlyOwner` — common patterns include:
+  - Role registries (`hasRole`, `grantRole` — e.g., AccessControl)
+  - Allowlist/whitelist mappings
+  - Timelock/guardian multi-role systems
+  - Delegated approval (`isApprovedForAll`, `allowance`, `isAuthorized`)
+  - Custom `msg.sender` checks in require/if statements
