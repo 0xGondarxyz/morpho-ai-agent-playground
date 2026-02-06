@@ -83,6 +83,38 @@ No significant ambiguities found. Well-designed for agnosticity.
 | 4 | **Rounding direction assumed universal** | Low | APPLIED — Made conditional: "If a function involves mathematical conversions... otherwise omit MATH: tags" |
 | 5 | **"cache files" terminology** | Low | APPLIED — Replaced with explicit file path |
 
+## Phase 10 — Code Simplification Suggestions
+
+**FULL REWRITE.** Original was too shallow — generic CS 101 refactoring patterns that don't address what actually creates cognitive load for auditors.
+
+| # | Issue | Severity | Fix |
+|---|-------|----------|-----|
+| 1 | **Categories were generic refactoring** — named constants, formula decomposition, function extraction are coding tips, not audit-meaningful simplifications | **Critical** | APPLIED — Complete rewrite with 8 audit-focused categories: tangled validation/mutation, implicit ordering, scattered access control, hidden side effects, complex arithmetic, magic numbers, long functions, duplicated logic |
+| 2 | **Didn't read actual source files** — judged cognitive load from phase 0 summary, which strips all formatting and structure | High | APPLIED — Explicit step 3: "Read the actual source files... you cannot judge cognitive load from a summary" |
+| 3 | **No risk assessment per suggestion** — every code change introduces risk, but no guidance on what could go wrong | High | APPLIED — Every suggestion now requires a "Risk assessment" section |
+| 4 | **No guidance on what NOT to suggest** — could suggest splitting tightly-coupled functions which makes auditing harder | Medium | APPLIED — New "What NOT to Suggest" section with 5 anti-patterns |
+| 5 | **Missing handoff design** — team lead said "anyone can use Claude locally to finish the job" but suggestions weren't self-contained | High | APPLIED — Every suggestion includes a "Handoff prompt" block ready for copy-paste into a local Claude session |
+| 6 | **No suggestion dependency tracking** — some changes are prerequisites for others or conflict | Medium | APPLIED — New "Suggestion Dependency Map" table in output |
+| 7 | **Missing cross-phase inputs** — didn't leverage overview.md or charts-flows.md to identify what's security-critical | Medium | APPLIED — Step 2 reads overview.md and charts-flows.md |
+| 8 | **Missing PARTS/[none]/PARSE_ERROR handling** | Low | APPLIED |
+
+## Phase 11 — Formal Verification Suggestions
+
+**FULL REWRITE.** Original scope was wrong (tried to verify entire protocol), examples were lending-specific, templates were too bare to run, no effort estimates.
+
+| # | Issue | Severity | Fix |
+|---|-------|----------|-----|
+| 1 | **Scope was wrong** — targeted full protocol verification instead of "partial FV on key libraries" per deliverable | **Critical** | APPLIED — Scoped to libraries and pure functions only. New "What to Target" (4 categories) and "What NOT to Target" (5 exclusions) sections. Explicit: "This is NOT a full protocol verification engagement" |
+| 2 | **Lending-specific examples throughout** — totalShares, deposit→shares, convertToShares/convertToAssets | High | APPLIED — All examples are now generic math properties (mulDiv, bounds, monotonicity, roundtrip). Property types section uses abstract notation |
+| 3 | **Tool selection oversimplified** — rigid "pure → Halmos, state → Certora" table | High | APPLIED — Replaced with practical consideration-based guide. Added Echidna/Medusa fuzzing as a stepping stone approach: "fuzz first to validate, then formally verify" |
+| 4 | **Templates wouldn't actually run** — missing imports, setup, contract structure | High | APPLIED — Templates now include SPDX headers, pragma, imports, contract structure, and using-for directives |
+| 5 | **No effort/complexity estimates** — person implementing can't plan their time | High | APPLIED — Every property has "Estimated effort" (Small/Medium/Large) with justification. Verification plan ordered by effort: quick wins first |
+| 6 | **Priority rubric undefined** | Medium | APPLIED — CRITICAL (value-transfer paths, loss-of-funds risk), HIGH (broad usage, accounting bugs), MEDIUM (limited context, lower ROI) |
+| 7 | **Missing "audit scope reduction" framing** — didn't explain what auditors can skip if property is verified | High | APPLIED — Every property and every library section includes "Audit scope reduction" statement. Executive summary has a scope reduction table |
+| 8 | **Missing handoff design** — same issue as phase 10 | High | APPLIED — Every property includes a handoff prompt for local Claude session |
+| 9 | **Existing coverage analysis too shallow** — just "list key properties" | Medium | APPLIED — Explicit gap analysis: what's covered, what's missing, don't duplicate |
+| 10 | **Missing cross-phase inputs and PARTS/[none]/PARSE_ERROR handling** | Medium | APPLIED |
+
 ## Cross-Phase Concerns
 
 | # | Issue | Severity | Fix |
